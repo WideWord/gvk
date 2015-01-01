@@ -11,12 +11,16 @@ import(
 
 )
 
-type ServerSession struct {
-	appID string
-	appSecret string
+type Session struct{
 	accessToken string
 	CallDelay time.Duration
 	callDelayTimer <-chan time.Time
+}
+
+type ServerSession struct {
+	Session
+	appID string
+	appSecret string
 }
 
 func Server(appID string, appSecret string) (result *ServerSession, err error) {
@@ -70,7 +74,11 @@ func Server(appID string, appSecret string) (result *ServerSession, err error) {
 	return
 }
 
-func (session *ServerSession) PlainCall(method string, params url.Values, response interface{}) (err error) {
+type ClientSession struct{
+	Session
+}
+
+func (session *Session) PlainCall(method string, params url.Values, response interface{}) (err error) {
 
 	query, err := url.Parse("https://api.vk.com/")
 
@@ -118,7 +126,7 @@ func (session *ServerSession) PlainCall(method string, params url.Values, respon
 }
 
 
-func (session *ServerSession) AuthCall(method string, params url.Values, response interface{}) error {
+func (session *Session) AuthCall(method string, params url.Values, response interface{}) error {
 	params.Add("access_token", session.accessToken)
 	return session.PlainCall(method, params, response)
 }
