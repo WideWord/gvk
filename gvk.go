@@ -81,7 +81,11 @@ func (session *ServerSession) PlainCall(method string, params url.Values, respon
 
 	url := query.String()
 
+	<- session.callDelayTimer
+
 	resp, err := http.Get(url)
+
+	session.callDelayTimer = time.After(session.CallDelay)
 
 	if err != nil { panic(err) }
 
@@ -98,6 +102,8 @@ func (session *ServerSession) PlainCall(method string, params url.Values, respon
 		Response interface{}
 	}
 
+	//fmt.Printf("===\n%s\n===\n%s\n===", url, data)
+
 	parsedData.Response = response
 
 	err = json.Unmarshal(data, &parsedData)
@@ -113,9 +119,7 @@ func (session *ServerSession) PlainCall(method string, params url.Values, respon
 
 
 func (session *ServerSession) AuthCall(method string, params url.Values, response interface{}) error {
-	<- session.callDelayTimer
 	params.Add("access_token", session.accessToken)
-	session.callDelayTimer = time.After(session.CallDelay)
 	return session.PlainCall(method, params, response)
 }
 
